@@ -238,7 +238,7 @@ if __name__ == "__main__":
         await auth.initialize()
 
         if not auth.is_authenticated:
-            print("✗ Authentication failed")
+            print(" Authentication failed")
             return
 
         # Create data service

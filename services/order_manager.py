@@ -43,7 +43,7 @@ class OrderManager:
             # Paper trading simulation
             if self.trading_mode == TradingMode.PAPER:
                 order_id = self._simulate_order(symbol, side, quantity, order_type, price)
-                logger.info(f"📝 PAPER ORDER: {side.value} {quantity} {symbol} @ {price if price > 0 else 'Market'}")
+                logger.info(f" PAPER ORDER: {side.value} {quantity} {symbol} @ {price if price > 0 else 'Market'}")
                 return order_id
 
             # Live trading
@@ -106,7 +106,7 @@ class OrderManager:
 
             if self.trading_mode == TradingMode.PAPER:
                 order_id = self._simulate_order(symbol, side, quantity, OrderType.STOP_LOSS, stop_price)
-                logger.info(f"📝 PAPER SL: {side.value} {quantity} {symbol} @ {stop_price}")
+                logger.info(f" PAPER SL: {side.value} {quantity} {symbol} @ {stop_price}")
                 return order_id
 
             order_data = {
@@ -150,7 +150,7 @@ class OrderManager:
 
             if self.trading_mode == TradingMode.PAPER:
                 order_id = self._simulate_order(symbol, side, quantity, OrderType.LIMIT, target_price)
-                logger.info(f"📝 PAPER TARGET: {side.value} {quantity} {symbol} @ {target_price}")
+                logger.info(f" PAPER TARGET: {side.value} {quantity} {symbol} @ {target_price}")
                 return order_id
 
             order_data = {
@@ -184,7 +184,7 @@ class OrderManager:
         """Modify existing order"""
         try:
             if self.trading_mode == TradingMode.PAPER:
-                logger.info(f"📝 PAPER MODIFY: Order {order_id}")
+                logger.info(f" PAPER MODIFY: Order {order_id}")
                 return True
 
             modify_data = {
@@ -214,7 +214,7 @@ class OrderManager:
         """Cancel order"""
         try:
             if self.trading_mode == TradingMode.PAPER:
-                logger.info(f"📝 PAPER CANCEL: Order {order_id}")
+                logger.info(f" PAPER CANCEL: Order {order_id}")
                 if order_id in self.orders:
                     self.orders[order_id]['status'] = 'CANCELLED'
                 return True
@@ -306,7 +306,7 @@ if __name__ == "__main__":
         await auth.initialize()
 
         if not auth.is_authenticated:
-            print("✗ Authentication failed")
+            print(" Authentication failed")
             return
 
         # Create order manager

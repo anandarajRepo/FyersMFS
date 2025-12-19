@@ -135,4 +135,4 @@ if __name__ == "__main__":
         validate_configuration()
         print(" Configuration is valid")
     except ValueError as e:
-        print(f"✗ Configuration error: {e}")
+        print(f" Configuration error: {e}")

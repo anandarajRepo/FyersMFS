@@ -1,8 +1,35 @@
-# Python
+# .gitignore for MFS Trading Strategy
+
+# ===== SECURITY & CREDENTIALS =====
+# CRITICAL: Never commit these files
+*.env
+.env*
+config.json
+secrets.json
+credentials.json
+api_keys.txt
+tokens.txt
+
+# Fyers API credentials
+fyers_config.json
+access_token.txt
+client_secrets.json
+
+# Trading configuration with sensitive data
+trading_config_prod.json
+live_trading_config.json
+
+# Database credentials
+database.conf
+db_config.json
+
+# ===== PYTHON =====
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
+
+# Distribution / packaging
 .Python
 build/
 develop-eggs/
@@ -20,57 +47,102 @@ wheels/
 .installed.cfg
 *.egg
 
-# Virtual Environment
+# Virtual environments
+.env
+.venv
+env/
 venv/
 ENV/
-env/
-.venv
+env.bak/
+venv.bak/
 
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-.DS_Store
-
-# Environment variables
-.env
-.env.local
-.env.*.local
-
-# Logs
+# ===== TRADING SPECIFIC =====
+# Trading logs and data
 logs/
 *.log
+trading_logs/
+strategy_logs/
+execution_logs/
+error_logs/
 
-# Data
-data/*.db
-data/*.sqlite
+# Market data files
+market_data/
+historical_data/
+*.csv
+*.xlsx
+*.xls
 data/*.csv
+data/*.json
+data/*.pkl
 
-# Jupyter Notebook
-.ipynb_checkpoints
+# Backtest results
+backtest_results/
+strategy_results/
+performance_reports/
 
-# pytest
-.pytest_cache/
-.coverage
-htmlcov/
+# Position and portfolio data
+positions.json
+portfolio.json
+trades.json
+pnl_data.json
 
-# mypy
-.mypy_cache/
-.dmypy.json
-dmypy.json
+# Cache files
+cache/
+.cache/
+*.cache
 
-# Backups
-*.bak
-*.backup
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+trading.db
+positions.db
+
+# ===== IDE & EDITORS =====
+# VSCode
+.vscode/
+*.code-workspace
+
+# PyCharm
+.idea/
+*.iml
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# ===== OPERATING SYSTEM =====
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
 *~
+.directory
+.Trash-*
 
-# Temporary files
-*.tmp
+# ===== TEMPORARY & BACKUP =====
 temp/
 tmp/
+*.tmp
+*.temp
+*.bak
+*.backup
+*.orig
 
-# OS
-Thumbs.db
-.DS_Store
+# ===== OUTPUT FILES =====
+output/
+results/
+exports/
+
+# ===== PERSONAL NOTES =====
+notes.txt
+TODO.txt
+README_personal.md
+personal_notes/

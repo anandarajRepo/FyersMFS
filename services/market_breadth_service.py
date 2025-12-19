@@ -412,6 +412,6 @@ if __name__ == "__main__":
             print(f"  Classification: {summary['classification']}")
             print(f"  Fallback Mode: {summary['is_fallback']}")
         else:
-            print(f"  ✗ Failed to fetch: {summary.get('error', 'Unknown error')}")
+            print(f"   Failed to fetch: {summary.get('error', 'Unknown error')}")
     except Exception as e:
-        print(f"  ✗ Error: {e}")
+        print(f"   Error: {e}")

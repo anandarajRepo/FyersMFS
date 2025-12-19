@@ -8,6 +8,13 @@ Main entry point for the trading system
 import asyncio
 import sys
 from pathlib import Path
+from utils.enhanced_auth_helper import (
+    setup_auth_only,
+    authenticate_fyers,
+    test_authentication,
+    update_pin_only,
+    show_authentication_status
+)
 
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent))
@@ -151,7 +158,7 @@ async def test_components():
     logger.info("\n1. Testing Authentication:")
     auth = FyersAuth()
     success = await auth.initialize()
-    logger.info(f"  {'' if success else '✗'} Authentication")
+    logger.info(f"  {'' if success else ''} Authentication")
 
     if success:
         # Test data service
@@ -160,64 +167,170 @@ async def test_components():
         symbol = "NSE:NIFTY50-INDEX"
 
         prev_data = await data_service.get_previous_day_data(symbol)
-        logger.info(f"  {'' if prev_data else '✗'} Previous day data")
+        logger.info(f"  {'' if prev_data else ''} Previous day data")
 
         quote = await data_service.get_current_quote(symbol)
-        logger.info(f"  {'' if quote else '✗'} Current quote")
+        logger.info(f"  {'' if quote else ''} Current quote")
 
         # Test market breadth
         logger.info("\n3. Testing Market Breadth:")
         breadth_service = SimulatedMarketBreadthService()
         summary = breadth_service.get_breadth_summary()
-        logger.info(f"  {'' if summary['available'] else '✗'} Market breadth")
+        logger.info(f"  {'' if summary['available'] else ''} Market breadth")
         logger.info(f"  Classification: {summary.get('classification', 'Unknown')}")
 
     logger.info("\n" + "=" * 60)
+    
+    
+async def run_mfs_strategy():
+    """Main function to run the MFS strategy with enhanced authentication"""
+    try:
+        logger.info("=" * 60)
+        logger.info("STARTING 5-MINUTE MARKET FORCE SCALPING STRATEGY")
+        logger.info("=" * 60)
+
+        # Load configuration
+        fyers_config, strategy_config, trading_config, ws_config = load_configuration()
+
+        # Validate basic configuration
+        if not all([fyers_config.client_id, fyers_config.secret_key]):
+            logger.error(" Missing required Fyers API credentials")
+            logger.error("Please set FYERS_CLIENT_ID and FYERS_SECRET_KEY in .env file")
+            logger.error("Run 'python main.py auth' to setup authentication")
+            return
+
+        # Enhanced authentication with auto-refresh
+        config_dict = {'fyers_config': fyers_config}
+        if not authenticate_fyers(config_dict):
+            logger.error(" Authentication failed. Please run 'python main.py auth' to setup authentication")
+            return
+
+        logger.info(" Authentication successful - Access token validated")
+
+        # Log strategy configuration
+        logger.info(f"Portfolio Value: ₹{strategy_config.portfolio_value:,}")
+        logger.info(f"Risk per Trade: {strategy_config.risk_per_trade_pct}%")
+        logger.info(f"Max Positions: {strategy_config.max_positions}")
+        logger.info(f"MFS Period: First 5 minutes of market")
+
+        # Create and run strategy
+        strategy = MFSStrategy(
+            fyers_config=config_dict['fyers_config'],
+            strategy_config=strategy_config,
+            trading_config=trading_config,
+            ws_config=ws_config
+        )
+
+        # Run strategy
+        logger.info(" Initializing MFS Strategy...")
+        await strategy.run()
+
+    except KeyboardInterrupt:
+        logger.info(" Strategy stopped by user (Ctrl+C)")
+    except Exception as e:
+        logger.error(f" Fatal error in main: {e}")
+        logger.exception("Full error details:")
 
 
 def main():
-    """Main entry point"""
-    print("""
-    ╔════════════════════════════════════════════════════════════╗
-    ║                                                            ║
-    ║               FyersMMFS Trading System                     ║
-    ║        5-Minute Market Force Scalping Strategy             ║
-    ║                                                            ║
-    ╚════════════════════════════════════════════════════════════╝
-    """)
+    """Enhanced main entry point with authentication commands"""
 
-    if len(sys.argv) < 2:
-        print("Usage: python main.py <command>")
-        print("\nCommands:")
-        print("  run         - Run MMFS strategy (live/paper)")
-        print("  test        - Test components")
-        print("  sim         - Run with simulated market breadth")
-        print("  auth        - Generate authentication URL")
-        print("\nExamples:")
-        print("  python main.py run")
-        print("  python main.py test")
-        print("  python main.py sim")
-        sys.exit(1)
+    # Display header
+    print("=" * 80)
+    print("    5-MINUTE MARKET FORCE SCALPING (MFS) STRATEGY")
+    print("    Advanced Ultra-Short Scalping System")
+    print("=" * 80)
 
-    command = sys.argv[1].lower()
+    if len(sys.argv) > 1:
+        command = sys.argv[1].lower()
 
-    if command == "run":
-        asyncio.run(run_mmfs_strategy(use_simulated_breadth=False))
+        if command == "run":
+            logger.info(" Starting 5-Minute Market Force Scalping Strategy")
+            asyncio.run(run_mfs_strategy())
 
-    elif command == "sim":
-        asyncio.run(run_mmfs_strategy(use_simulated_breadth=True))
+        elif command == "auth":
+            print(" Setting up Fyers API Authentication")
+            setup_auth_only()
 
-    elif command == "test":
-        asyncio.run(test_components())
+        elif command == "test-auth":
+            print(" Testing Fyers API Authentication")
+            test_authentication()
 
-    elif command == "auth":
-        auth = FyersAuth()
-        auth.generate_auth_url()
+        elif command == "update-pin":
+            print(" Updating Trading PIN")
+            update_pin_only()
+
+        elif command == "auth-status":
+            show_authentication_status()
+
+        elif command == "help":
+            show_strategy_help()
+
+        else:
+            print(f" Unknown command: {command}")
+            print("\n Available commands:")
+            commands = [
+                ("run", "Run the MFS trading strategy"),
+                ("auth", "Setup Fyers API authentication"),
+                ("test-auth", "Test authentication status"),
+                ("update-pin", "Update trading PIN"),
+                ("auth-status", "Show detailed authentication status"),
+                ("help", "Show strategy configuration guide"),
+            ]
+
+            for cmd, desc in commands:
+                print(f"  python main.py {cmd:<12} - {desc}")
 
     else:
-        print(f"Unknown command: {command}")
-        print("Run 'python main.py' without arguments for help")
-        sys.exit(1)
+        # Interactive menu
+        print(" Advanced 5-minute scalping with real-time data")
+        print(" Secure authentication with auto-refresh")
+        print("\nSelect an option:")
+
+        menu_options = [
+            ("1", " Run MFS Trading Strategy"),
+            ("2", " Setup Fyers Authentication"),
+            ("3", " Test Authentication"),
+            ("4", " Update Trading PIN"),
+            ("5", " Show Authentication Status"),
+            ("6", " Strategy Configuration Guide"),
+            ("7", " Exit")
+        ]
+
+        for option, description in menu_options:
+            print(f"{option:>2}. {description}")
+
+        choice = input(f"\nSelect option (1-{len(menu_options)}): ").strip()
+
+        if choice == "1":
+            logger.info(" Starting MFS Strategy")
+            asyncio.run(run_mfs_strategy())
+
+        elif choice == "2":
+            print(" Setting up Fyers API Authentication")
+            setup_auth_only()
+
+        elif choice == "3":
+            print(" Testing Fyers API Authentication")
+            test_authentication()
+
+        elif choice == "4":
+            print(" Updating Trading PIN")
+            update_pin_only()
+
+        elif choice == "5":
+            show_authentication_status()
+
+        elif choice == "6":
+            show_strategy_help()
+
+        elif choice == "7":
+            print("\n Goodbye! Happy Trading!")
+            print(" Remember: Trade responsibly and manage your risk!")
+
+        else:
+            print(f" Invalid choice: {choice}")
+            print("Please select a number between 1 and 7")
 
 
 if __name__ == "__main__":

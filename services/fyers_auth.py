@@ -199,7 +199,7 @@ if __name__ == "__main__":
                 for fund in funds:
                     print(f"  {fund.get('title')}: ₹{fund.get('equityAmount', 0):,.2f}")
         else:
-            print("\n✗ Authentication failed")
+            print("\n Authentication failed")
             print("\nTo set up authentication:")
             print("1. Run: python services/fyers_auth.py --generate-url")
             print("2. Visit the URL and authorize")
