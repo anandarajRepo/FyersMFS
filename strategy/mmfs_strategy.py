@@ -20,7 +20,7 @@ from models.mmfs_models import (
     MMFSTradeResult, MMFSStrategyMetrics, MMFSMarketState
 )
 from services.market_breadth_service import MarketBreadthService
-from services.hybrid_orb_data_service import HybridORBDataService
+from services.data_service import DataService
 from services.order_manager import OrderManager
 
 logger = logging.getLogger(__name__)
@@ -33,7 +33,7 @@ class MMFSStrategy:
             self,
             strategy_config: MMFSStrategyConfig,
             trading_config: MMFSTradingConfig,
-            data_service: HybridORBDataService,
+            data_service: DataService,
             order_manager: OrderManager,
             breadth_service: MarketBreadthService,
             symbols: List[str]
@@ -75,16 +75,16 @@ class MMFSStrategy:
         self.premarket_collected = False
         self.first_candle_tracked = False
 
-        logger.info("🚀 MMFS Strategy initialized")
+        logger.info(" MMFS Strategy initialized")
 
     async def start(self):
         """Start MMFS strategy"""
         logger.info("=" * 80)
-        logger.info("🚀 Starting MMFS Strategy")
-        logger.info(f"📊 Portfolio: ₹{self.strategy_config.portfolio_value:,}")
+        logger.info(" Starting MMFS Strategy")
+        logger.info(f" Portfolio: ₹{self.strategy_config.portfolio_value:,}")
         logger.info(f"⚡ Risk per Trade: {self.strategy_config.risk_per_trade_pct}%")
-        logger.info(f"🎯 Max Trades: {self.strategy_config.max_trades_per_day}")
-        logger.info(f"⏰ Execution Window: 9:15-9:20 AM")
+        logger.info(f" Max Trades: {self.strategy_config.max_trades_per_day}")
+        logger.info(f" Execution Window: 9:15-9:20 AM")
         logger.info("=" * 80)
 
         self.is_running = True
@@ -110,7 +110,7 @@ class MMFSStrategy:
                     if current_time >= time(9, 16) and not self.first_candle_tracked:
                         self.market_state.first_candle_complete = True
                         self.first_candle_tracked = True
-                        logger.info("✅ First candle tracking complete")
+                        logger.info(" First candle tracking complete")
 
                 # Step 4: Track 5-minute range (9:15-9:20)
                 if self._is_execution_window(current_time):
@@ -127,19 +127,19 @@ class MMFSStrategy:
 
                 # Step 7: Check if trading day complete (after 9:25)
                 if current_time > time(9, 25):
-                    logger.info("⏰ MMFS execution window complete for the day")
+                    logger.info(" MMFS execution window complete for the day")
                     break
 
                 await asyncio.sleep(1)  # Check every second
 
         except Exception as e:
-            logger.error(f"❌ Error in MMFS strategy: {e}", exc_info=True)
+            logger.error(f" Error in MMFS strategy: {e}", exc_info=True)
         finally:
             await self.stop()
 
     async def _collect_premarket_data(self):
         """Collect pre-market data for all symbols"""
-        logger.info("📊 Collecting pre-market data...")
+        logger.info(" Collecting pre-market data...")
 
         for symbol in self.symbols:
             try:
@@ -171,11 +171,11 @@ class MMFSStrategy:
                 logger.error(f"Error collecting premarket data for {symbol}: {e}")
 
         self.market_state.symbols_analyzed = len(self.premarket_data)
-        logger.info(f"✅ Pre-market data collected for {self.market_state.symbols_analyzed} symbols")
+        logger.info(f" Pre-market data collected for {self.market_state.symbols_analyzed} symbols")
 
     async def _update_market_breadth(self):
         """Update market breadth classification"""
-        logger.info("📈 Updating market breadth...")
+        logger.info(" Updating market breadth...")
 
         try:
             breadth_data = self.breadth_service.fetch_advance_decline_data()
@@ -189,9 +189,9 @@ class MMFSStrategy:
                 self.market_state.breadth_classification = self.breadth_service.get_market_breadth()
                 self.market_state.breadth_strength = strength
 
-                logger.info(f"✅ Market Breadth: {classification} (A/D: {ad_ratio:.2f}, Strength: {strength:.0f}/100)")
+                logger.info(f" Market Breadth: {classification} (A/D: {ad_ratio:.2f}, Strength: {strength:.0f}/100)")
             else:
-                logger.warning("⚠️ Could not fetch market breadth data")
+                logger.warning(" Could not fetch market breadth data")
         except Exception as e:
             logger.error(f"Error updating market breadth: {e}")
 
@@ -362,7 +362,7 @@ class MMFSStrategy:
             vwap_alignment=True
         )
 
-        logger.info(f"✅ Setup 1 Signal: {symbol} LONG @ {entry_price:.2f} "
+        logger.info(f" Setup 1 Signal: {symbol} LONG @ {entry_price:.2f} "
                     f"(Gap: {premarket.gap_pct:+.2f}%, Confidence: {confidence:.0%})")
 
         return signal
@@ -421,7 +421,7 @@ class MMFSStrategy:
 
     async def _execute_signal(self, signal: MMFSSignal):
         """Execute MMFS trade signal"""
-        logger.info(f"📤 Executing {signal.setup_type.value} signal for {signal.symbol}")
+        logger.info(f" Executing {signal.setup_type.value} signal for {signal.symbol}")
 
         # Calculate position size
         risk_amount = self.strategy_config.portfolio_value * (self.strategy_config.risk_per_trade_pct / 100)
@@ -466,10 +466,10 @@ class MMFSStrategy:
             # position.order_id = order_id
 
             self.positions[signal.symbol] = position
-            logger.info(f"✅ Position opened for {signal.symbol}")
+            logger.info(f" Position opened for {signal.symbol}")
 
         except Exception as e:
-            logger.error(f"❌ Error executing signal: {e}")
+            logger.error(f" Error executing signal: {e}")
 
     async def _monitor_positions(self):
         """Monitor active MMFS positions"""
@@ -482,7 +482,7 @@ class MMFSStrategy:
 
                 # Time-based exit
                 if position.should_exit_by_time():
-                    logger.info(f"⏰ Time-based exit for {symbol} (held {holding_duration:.1f}min)")
+                    logger.info(f" Time-based exit for {symbol} (held {holding_duration:.1f}min)")
                     await self._exit_position(position, "TIME_BASED")
                     continue
 
@@ -517,7 +517,7 @@ class MMFSStrategy:
 
     async def _move_to_breakeven(self, position: MMFSPosition):
         """Move stop loss to breakeven"""
-        logger.info(f"💰 Moving {position.symbol} to breakeven")
+        logger.info(f" Moving {position.symbol} to breakeven")
 
         position.current_stop_loss = position.entry_price
         position.moved_to_breakeven = True
@@ -529,7 +529,7 @@ class MMFSStrategy:
 
     async def _exit_position(self, position: MMFSPosition, exit_reason: str):
         """Exit MMFS position"""
-        logger.info(f"📉 Exiting {position.symbol} - Reason: {exit_reason}")
+        logger.info(f" Exiting {position.symbol} - Reason: {exit_reason}")
 
         # Placeholder - get actual exit price
         exit_price = position.current_price if position.current_price > 0 else position.entry_price
@@ -561,7 +561,7 @@ class MMFSStrategy:
         del self.positions[position.symbol]
 
         # Log trade result
-        result_emoji = "✅" if trade.is_winner() else "❌" if trade.is_loser() else "⚖️"
+        result_emoji = "" if trade.is_winner() else "" if trade.is_loser() else "⚖️"
         logger.info(f"{result_emoji} Trade Complete: {trade.symbol} | "
                     f"P&L: ₹{trade.net_pnl:+,.2f} ({trade.return_pct:+.2f}%) | "
                     f"Held: {trade.holding_duration_seconds}s")
@@ -571,7 +571,7 @@ class MMFSStrategy:
                 trade.is_loser() and
                 self.market_state.trades_today == 1):
             self.market_state.stop_trading_till_945 = True
-            logger.warning("⚠️ First trade was a loss. Stopping trading till 9:45 AM")
+            logger.warning(" First trade was a loss. Stopping trading till 9:45 AM")
 
     # Helper methods
 
@@ -598,7 +598,7 @@ class MMFSStrategy:
     async def stop(self):
         """Stop MMFS strategy"""
         logger.info("=" * 80)
-        logger.info("🛑 Stopping MMFS Strategy")
+        logger.info(" Stopping MMFS Strategy")
         self.is_running = False
 
         # Close any open positions
@@ -611,7 +611,7 @@ class MMFSStrategy:
     def _print_final_metrics(self):
         """Print final strategy metrics"""
         logger.info("=" * 80)
-        logger.info("📊 MMFS Strategy - Final Metrics")
+        logger.info(" MMFS Strategy - Final Metrics")
         logger.info("=" * 80)
         logger.info(f"Total Trades: {self.metrics.total_trades}")
         logger.info(f"Winners: {self.metrics.winning_trades} | Losers: {self.metrics.losing_trades}")

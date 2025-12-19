@@ -77,4 +77,4 @@ if __name__ == "__main__":
     logger.warning("Warning message")
     logger.error("Error message")
 
-    print("\n✓ Logger test complete. Check logs/ directory for log file.")
+    print("\n Logger test complete. Check logs/ directory for log file.")

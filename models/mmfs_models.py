@@ -82,14 +82,14 @@ class MMFSSignal:
     first_candle_close: float
     first_candle_vwap: float
 
-    # 5-minute range (if applicable)
-    five_min_range_high: Optional[float] = None
-    five_min_range_low: Optional[float] = None
-
-    # Signal quality metrics
+    # Signal quality metrics (MOVED BEFORE OPTIONAL FIELDS)
     confidence: float  # 0-1 scale
     volume_ratio: float  # Current vs average
     vwap_alignment: bool  # Price aligned with VWAP as per setup
+
+    # 5-minute range (if applicable) - OPTIONAL FIELDS
+    five_min_range_high: Optional[float] = None
+    five_min_range_low: Optional[float] = None
     rejection_wick_pct: float = 0.0  # For failure setups
 
     # Risk metrics
@@ -571,4 +571,4 @@ if __name__ == "__main__":
     print(f"  Net P&L: ₹{metrics.net_pnl:,.2f}")
     print(f"  Setup 1 Win Rate: {metrics.get_setup_win_rate(MMFSSetupType.GAP_UP_BREAKOUT):.1f}%")
 
-    print("\n✓ All models working correctly!")
+    print("\n All models working correctly!")

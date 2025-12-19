@@ -62,7 +62,7 @@ class DataService:
                         'vwap': (prev_candle[2] + prev_candle[3] + prev_candle[4]) / 3  # Approximation
                     }
 
-                    logger.info(f"✓ Previous day data for {symbol}: Close={result['close']}")
+                    logger.info(f" Previous day data for {symbol}: Close={result['close']}")
                     return result
                 else:
                     logger.warning(f"Insufficient historical data for {symbol}")

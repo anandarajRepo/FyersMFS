@@ -405,7 +405,7 @@ if __name__ == "__main__":
         summary = real_service.get_breadth_summary()
 
         if summary['available']:
-            print(f"  ✓ Successfully fetched real market breadth")
+            print(f"   Successfully fetched real market breadth")
             print(f"  Advances: {summary['advances']}")
             print(f"  Declines: {summary['declines']}")
             print(f"  A/D Ratio: {summary['ad_ratio']}")

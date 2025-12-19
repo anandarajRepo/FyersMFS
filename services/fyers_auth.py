@@ -44,7 +44,7 @@ class FyersAuth:
             profile = self.get_profile()
             if profile:
                 self.is_authenticated = True
-                logger.info(f"✓ Authenticated as: {profile.get('name', 'Unknown')}")
+                logger.info(f" Authenticated as: {profile.get('name', 'Unknown')}")
                 logger.info(f"  User ID: {profile.get('fy_id', 'Unknown')}")
                 return True
             else:
@@ -182,7 +182,7 @@ if __name__ == "__main__":
         success = await auth.initialize()
 
         if success:
-            print("\n✓ Authentication successful")
+            print("\n Authentication successful")
 
             # Get profile
             profile = auth.get_profile()

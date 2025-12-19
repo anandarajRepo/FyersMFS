@@ -74,7 +74,7 @@ class OrderManager:
                     'timestamp': datetime.now()
                 }
 
-                logger.info(f"✅ ORDER PLACED: {order_id} - {side.value} {quantity} {symbol}")
+                logger.info(f" ORDER PLACED: {order_id} - {side.value} {quantity} {symbol}")
 
                 # Place bracket orders if stop_loss or target provided
                 if stop_loss:
@@ -85,7 +85,7 @@ class OrderManager:
 
                 return order_id
             else:
-                logger.error(f"❌ Order placement failed: {response}")
+                logger.error(f" Order placement failed: {response}")
                 return None
 
         except Exception as e:
@@ -126,10 +126,10 @@ class OrderManager:
 
             if response.get('s') == 'ok':
                 order_id = response.get('id')
-                logger.info(f"✅ SL ORDER: {order_id} @ {stop_price}")
+                logger.info(f" SL ORDER: {order_id} @ {stop_price}")
                 return order_id
             else:
-                logger.error(f"❌ SL order failed: {response}")
+                logger.error(f" SL order failed: {response}")
                 return None
 
         except Exception as e:
@@ -170,10 +170,10 @@ class OrderManager:
 
             if response.get('s') == 'ok':
                 order_id = response.get('id')
-                logger.info(f"✅ TARGET ORDER: {order_id} @ {target_price}")
+                logger.info(f" TARGET ORDER: {order_id} @ {target_price}")
                 return order_id
             else:
-                logger.error(f"❌ Target order failed: {response}")
+                logger.error(f" Target order failed: {response}")
                 return None
 
         except Exception as e:
@@ -200,10 +200,10 @@ class OrderManager:
             response = self.fyers.modify_order(data=modify_data)
 
             if response.get('s') == 'ok':
-                logger.info(f"✅ ORDER MODIFIED: {order_id}")
+                logger.info(f" ORDER MODIFIED: {order_id}")
                 return True
             else:
-                logger.error(f"❌ Modify failed: {response}")
+                logger.error(f" Modify failed: {response}")
                 return False
 
         except Exception as e:
@@ -223,12 +223,12 @@ class OrderManager:
             response = self.fyers.cancel_order(data=cancel_data)
 
             if response.get('s') == 'ok':
-                logger.info(f"✅ ORDER CANCELLED: {order_id}")
+                logger.info(f" ORDER CANCELLED: {order_id}")
                 if order_id in self.orders:
                     self.orders[order_id]['status'] = 'CANCELLED'
                 return True
             else:
-                logger.error(f"❌ Cancel failed: {response}")
+                logger.error(f" Cancel failed: {response}")
                 return False
 
         except Exception as e:
@@ -329,7 +329,7 @@ if __name__ == "__main__":
         )
 
         if order_id:
-            print(f"✓ Order placed: {order_id}")
+            print(f" Order placed: {order_id}")
 
             # Check status
             status = order_manager.get_order_status(order_id)

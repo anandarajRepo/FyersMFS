@@ -42,52 +42,52 @@ async def run_mmfs_strategy(use_simulated_breadth: bool = False):
     """
     try:
         logger.info("=" * 80)
-        logger.info("🚀 FyersMMFS - Starting System")
+        logger.info(" FyersMMFS - Starting System")
         logger.info("=" * 80)
 
         # Step 1: Load and validate configuration
-        logger.info("\n📋 Step 1: Loading Configuration")
+        logger.info("\n Step 1: Loading Configuration")
         strategy_config, trading_config = load_mmfs_config_from_env()
 
         validation = validate_mmfs_config(strategy_config)
         if not validation['valid']:
-            logger.error(f"❌ Invalid configuration: {validation['errors']}")
+            logger.error(f" Invalid configuration: {validation['errors']}")
             return
 
         if validation['warnings']:
             for warning in validation['warnings']:
-                logger.warning(f"⚠️  {warning}")
+                logger.warning(f"  {warning}")
 
-        logger.info(f"✓ Configuration loaded successfully")
-        logger.info(f"  Portfolio: ₹{strategy_config.portfolio_value:,}")
+        logger.info(f" Configuration loaded successfully")
+        logger.info(f"  Portfolio: Rs.{strategy_config.portfolio_value:,}")
         logger.info(f"  Risk per Trade: {strategy_config.risk_per_trade_pct}%")
         logger.info(f"  Max Trades: {strategy_config.max_trades_per_day}")
 
         # Step 2: Check market status
-        logger.info("\n🕐 Step 2: Checking Market Status")
+        logger.info("\n Step 2: Checking Market Status")
         is_open, reason = is_market_open()
         logger.info(f"  Market Status: {reason}")
 
         if not is_open:
-            logger.warning("⚠️  Market is not open. Running in test mode.")
+            logger.warning("  Market is not open. Running in test mode.")
 
         # Step 3: Initialize Fyers authentication
-        logger.info("\n🔐 Step 3: Authenticating with Fyers")
+        logger.info("\n Step 3: Authenticating with Fyers")
         auth = FyersAuth()
         success = await auth.initialize()
 
         if not success:
-            logger.error("❌ Authentication failed")
+            logger.error(" Authentication failed")
             logger.info("\nTo set up authentication:")
             logger.info("1. python services/fyers_auth.py --generate-url")
             logger.info("2. Visit the URL and authorize")
             logger.info("3. python services/fyers_auth.py --generate-token YOUR_AUTH_CODE")
             return
 
-        logger.info("✓ Authentication successful")
+        logger.info(" Authentication successful")
 
         # Step 4: Initialize services
-        logger.info("\n⚙️  Step 4: Initializing Services")
+        logger.info("\n  Step 4: Initializing Services")
 
         fyers_client = auth.get_client()
         data_service = DataService(fyers_client)
@@ -104,10 +104,10 @@ async def run_mmfs_strategy(use_simulated_breadth: bool = False):
             logger.info("  Using real NSE market breadth")
             breadth_service = MarketBreadthService()
 
-        logger.info("✓ Services initialized")
+        logger.info(" Services initialized")
 
         # Step 5: Load symbols
-        logger.info("\n📊 Step 5: Loading Trading Symbols")
+        logger.info("\n Step 5: Loading Trading Symbols")
         primary_symbols = get_primary_symbols()
         symbol_list = list(primary_symbols.keys())
 
@@ -115,7 +115,7 @@ async def run_mmfs_strategy(use_simulated_breadth: bool = False):
         logger.info(f"  Total: {len(symbol_list)} symbols")
 
         # Step 6: Create and start strategy
-        logger.info("\n🎯 Step 6: Initializing MMFS Strategy")
+        logger.info("\n Step 6: Initializing MMFS Strategy")
 
         strategy = MMFSStrategy(
             strategy_config=strategy_config,
@@ -126,32 +126,32 @@ async def run_mmfs_strategy(use_simulated_breadth: bool = False):
             symbols=symbol_list
         )
 
-        logger.info("✓ Strategy initialized")
+        logger.info(" Strategy initialized")
         logger.info("\n" + "=" * 80)
 
         # Start strategy
         await strategy.start()
 
     except KeyboardInterrupt:
-        logger.info("\n\n⚠️  Interrupted by user")
+        logger.info("\n\n  Interrupted by user")
     except Exception as e:
-        logger.error(f"\n❌ Error running MMFS strategy: {e}", exc_info=True)
+        logger.error(f"\n Error running MMFS strategy: {e}", exc_info=True)
     finally:
         logger.info("\n" + "=" * 80)
-        logger.info("🛑 System Shutdown Complete")
+        logger.info(" System Shutdown Complete")
         logger.info("=" * 80)
 
 
 async def test_components():
     """Test individual components"""
-    logger.info("🧪 Testing Components")
+    logger.info(" Testing Components")
     logger.info("=" * 60)
 
     # Test authentication
     logger.info("\n1. Testing Authentication:")
     auth = FyersAuth()
     success = await auth.initialize()
-    logger.info(f"  {'✓' if success else '✗'} Authentication")
+    logger.info(f"  {'' if success else '✗'} Authentication")
 
     if success:
         # Test data service
@@ -160,16 +160,16 @@ async def test_components():
         symbol = "NSE:NIFTY50-INDEX"
 
         prev_data = await data_service.get_previous_day_data(symbol)
-        logger.info(f"  {'✓' if prev_data else '✗'} Previous day data")
+        logger.info(f"  {'' if prev_data else '✗'} Previous day data")
 
         quote = await data_service.get_current_quote(symbol)
-        logger.info(f"  {'✓' if quote else '✗'} Current quote")
+        logger.info(f"  {'' if quote else '✗'} Current quote")
 
         # Test market breadth
         logger.info("\n3. Testing Market Breadth:")
         breadth_service = SimulatedMarketBreadthService()
         summary = breadth_service.get_breadth_summary()
-        logger.info(f"  {'✓' if summary['available'] else '✗'} Market breadth")
+        logger.info(f"  {'' if summary['available'] else '✗'} Market breadth")
         logger.info(f"  Classification: {summary.get('classification', 'Unknown')}")
 
     logger.info("\n" + "=" * 60)
