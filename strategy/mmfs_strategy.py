@@ -561,7 +561,7 @@ class MMFSStrategy:
         del self.positions[position.symbol]
 
         # Log trade result
-        result_emoji = "" if trade.is_winner() else "" if trade.is_loser() else "⚖️"
+        result_emoji = "" if trade.is_winner() else "" if trade.is_loser() else "⚖"
         logger.info(f"{result_emoji} Trade Complete: {trade.symbol} | "
                     f"P&L: ₹{trade.net_pnl:+,.2f} ({trade.return_pct:+.2f}%) | "
                     f"Held: {trade.holding_duration_seconds}s")

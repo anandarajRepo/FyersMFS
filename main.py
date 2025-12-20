@@ -92,11 +92,10 @@ def load_configuration():
         strategy_config = MMFSStrategyConfig(
             portfolio_value=float(os.environ.get('PORTFOLIO_VALUE', 5000)),
             risk_per_trade_pct=float(os.environ.get('RISK_PER_TRADE', 1.0)),
-            max_positions=int(os.environ.get('MAX_POSITIONS', 3)),
-            mfs_period_minutes=int(os.environ.get('MFS_PERIOD_MINUTES', 5)),
+            max_positions=int(os.environ.get('MAX_POSITIONS', 1)),
             small_gap_threshold=float(os.environ.get('MIN_GAP_THRESHOLD', 0.30)),
-            moderate_gap_threshold=float(os.environ.get('MAX_GAP_THRESHOLD', 0.80)),
-            risk_reward_ratio=float(os.environ.get('TARGET_MULTIPLIER', 1.5)),
+            moderate_gap_threshold=float(os.environ.get('MODERATE_GAP_THRESHOLD', 0.80)),
+            risk_reward_ratio=float(os.environ.get('RISK_REWARD_RATIO', 1.5)),
             max_trades_per_day=int(os.environ.get('MAX_TRADES_PER_DAY', 2)),
             stop_after_first_loss=os.environ.get('STOP_AFTER_FIRST_LOSS', 'true').lower() == 'true'
         )
@@ -144,7 +143,7 @@ async def run_mmfs_strategy():
         logger.info(" Authentication successful - Access token validated")
 
         # Log strategy configuration
-        logger.info(f"Portfolio Value: ₹{strategy_config.portfolio_value:,}")
+        logger.info(f"Portfolio Value: Rs.{strategy_config.portfolio_value:,}")
         logger.info(f"Risk per Trade: {strategy_config.risk_per_trade_pct}%")
         logger.info(f"Max Positions: {strategy_config.max_positions}")
         logger.info(f"MMFS Period: First {strategy_config.execution_end_minute - strategy_config.execution_start_minute} minutes (9:15-9:20 AM)")
@@ -161,7 +160,7 @@ async def run_mmfs_strategy():
         fyers_client = fyers_auth.get_client()
 
         # Initialize services
-        logger.info(" Initializing services...")
+        logger.info("🔧 Initializing services...")
 
         data_service = DataService(fyers_client)
         order_manager = OrderManager(fyers_client)
@@ -207,23 +206,22 @@ def show_strategy_help():
     print("• Ultra-short holding periods (typically < 5 minutes)")
     print("• High win rate target: 70-80%")
 
-    print("\n CONFIGURATION PARAMETERS:")
+    print("\n⚙ CONFIGURATION PARAMETERS:")
     print("Edit .env file to customize:")
 
     print("\n Portfolio Settings:")
     print("  PORTFOLIO_VALUE=5000          # Total capital (₹5,000)")
     print("  RISK_PER_TRADE=1.0            # Risk 1% per trade")
-    print("  MAX_POSITIONS=3               # Max 3 concurrent positions")
+    print("  MAX_POSITIONS=1               # Max 1 concurrent position")
 
     print("\n MMFS Parameters:")
-    print("  MFS_PERIOD_MINUTES=5          # First 5 minutes only")
     print("  MIN_GAP_THRESHOLD=0.30        # Minimum gap size (0.30%)")
-    print("  MAX_GAP_THRESHOLD=0.80        # Moderate gap threshold (0.80%)")
+    print("  MODERATE_GAP_THRESHOLD=0.80   # Moderate gap threshold (0.80%)")
 
-    print("\n Risk Management:")
-    print("  STOP_LOSS_PCT=1.0             # 1% stop loss")
-    print("  TARGET_MULTIPLIER=1.5         # 1.5:1 reward-risk ratio")
+    print("\n🛡 Risk Management:")
+    print("  RISK_REWARD_RATIO=1.5         # 1.5:1 reward-risk ratio")
     print("  MAX_TRADES_PER_DAY=2          # Maximum 2 trades per day")
+    print("  STOP_AFTER_FIRST_LOSS=true    # Stop trading till 9:45 after first loss")
 
     print("\n TRADING SCHEDULE:")
     print("  Market Open: 09:15 AM IST")
@@ -295,7 +293,7 @@ def main():
 
     else:
         # Interactive menu
-        print(" Ultra-short scalping with 5-minute window")
+        print("⚡ Ultra-short scalping with 5-minute window")
         print(" Secure authentication with auto-refresh")
         print("\nSelect an option:")
 
