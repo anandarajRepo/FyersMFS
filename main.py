@@ -158,7 +158,7 @@ async def run_mmfs_strategy():
         fyers_client = fyers_auth.get_client()
 
         # Initialize services
-        logger.info("🔧 Initializing services...")
+        logger.info("Initializing services...")
 
         data_service = DataService(fyers_client)
         order_manager = OrderManager(fyers_client)
