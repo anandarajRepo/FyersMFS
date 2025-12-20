@@ -148,14 +148,34 @@ async def run_mmfs_strategy():
         logger.info(f"MMFS Period: First {strategy_config.execution_end_minute - strategy_config.execution_start_minute} minutes (9:15-9:20 AM)")
         logger.info(f"Gap Threshold: {strategy_config.small_gap_threshold}% - {strategy_config.moderate_gap_threshold}%")
 
-        # Initialize Fyers authentication service
-        await fyers_auth.initialize()
+        # Create Fyers client directly using the authenticated access token
+        try:
+            from fyers_apiv3 import fyersModel
 
-        if not fyers_auth.is_authenticated:
-            logger.error(" Failed to initialize Fyers authentication")
+            # Create Fyers client with authenticated access token
+            fyers_client = fyersModel.FyersModel(
+                client_id=fyers_config.client_id,
+                is_async=False,
+                token=fyers_config.access_token,
+                # log_path=os.path.join('logs', 'fyers_api.log')
+            )
+
+            logger.info(" Fyers client initialized successfully")
+
+            # Quick validation test
+            try:
+                profile_response = fyers_client.get_profile()
+                if profile_response.get('s') == 'ok':
+                    profile_data = profile_response.get('data', {})
+                    logger.info(f" Connected as: {profile_data.get('name', 'Unknown')}")
+                else:
+                    logger.warning(f" Profile validation returned: {profile_response.get('message', 'Unknown error')}")
+            except Exception as e:
+                logger.warning(f" Could not validate profile (will continue anyway): {e}")
+
+        except Exception as e:
+            logger.error(f" Failed to initialize Fyers client: {e}")
             return
-
-        fyers_client = fyers_auth.get_client()
 
         # Initialize services
         logger.info("Initializing services...")

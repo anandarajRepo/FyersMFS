@@ -81,7 +81,7 @@ class MMFSStrategy:
         """Start MMFS strategy"""
         logger.info("=" * 80)
         logger.info(" Starting MMFS Strategy")
-        logger.info(f" Portfolio: ₹{self.strategy_config.portfolio_value:,}")
+        logger.info(f" Portfolio: Rs.{self.strategy_config.portfolio_value:,}")
         logger.info(f" Risk per Trade: {self.strategy_config.risk_per_trade_pct}%")
         logger.info(f" Max Trades: {self.strategy_config.max_trades_per_day}")
         logger.info(f" Execution Window: 9:15-9:20 AM")
