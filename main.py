@@ -49,7 +49,6 @@ from utils.enhanced_auth_helper import (
 
 # Import strategy and services
 from strategy.mmfs_strategy import MMFSStrategy
-from services.fyers_auth import FyersAuth
 from services.data_service import DataService
 from services.order_manager import OrderManager
 from services.market_breadth_service import MarketBreadthService
@@ -150,7 +149,6 @@ async def run_mmfs_strategy():
         logger.info(f"Gap Threshold: {strategy_config.small_gap_threshold}% - {strategy_config.moderate_gap_threshold}%")
 
         # Initialize Fyers authentication service
-        fyers_auth = FyersAuth()
         await fyers_auth.initialize()
 
         if not fyers_auth.is_authenticated:
