@@ -194,13 +194,13 @@ async def run_mfs_strategy():
         logger.info("  Strategy implementation placeholder - add your strategy logic here")
 
         # Example:
-        # strategy = MFSStrategy(
-        #     fyers_config=config_dict['fyers_config'],
-        #     strategy_config=strategy_config,
-        #     trading_config=trading_config,
-        #     ws_config=ws_config
-        # )
-        # await strategy.run()
+        strategy = MFSStrategy(
+            fyers_config=config_dict['fyers_config'],
+            strategy_config=strategy_config,
+            trading_config=trading_config,
+            ws_config=ws_config
+        )
+        await strategy.run()
 
     except KeyboardInterrupt:
         logger.info(" Strategy stopped by user (Ctrl+C)")
