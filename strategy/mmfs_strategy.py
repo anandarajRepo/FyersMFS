@@ -143,29 +143,37 @@ class MMFSStrategy:
 
         for symbol in self.symbols:
             try:
-                # Fetch previous day data
-                # This is a placeholder - implement actual data fetching
-                # You would typically use data_service to fetch historical data
-
-                # For now, create dummy data structure
-                # Replace with actual implementation
                 logger.debug(f"Collecting data for {symbol}")
 
-                # Example implementation:
-                # prev_data = await self.data_service.get_previous_day_data(symbol)
-                # current_open = await self.data_service.get_current_open(symbol)
+                # Fetch previous day data
+                prev_data = await self.data_service.get_previous_day_data(symbol)
+                if not prev_data:
+                    logger.warning(f"Could not fetch previous day data for {symbol}")
+                    continue
 
-                # premarket = PreMarketData(
-                #     symbol=symbol,
-                #     previous_close=prev_data['close'],
-                #     today_open=current_open,
-                #     prev_high=prev_data['high'],
-                #     prev_low=prev_data['low'],
-                #     prev_vwap=prev_data['vwap']
-                # )
-                #
-                # self.premarket_data[symbol] = premarket
-                # logger.info(f"  {symbol}: Gap {premarket.gap_pct:+.2f}% ({premarket.gap_type.value})")
+                # Fetch current open price
+                quote = await self.data_service.get_current_quote(symbol)
+                if not quote:
+                    logger.warning(f"Could not fetch current quote for {symbol}")
+                    continue
+
+                current_open = quote.get('open') or quote.get('last_price')
+                if not current_open:
+                    logger.warning(f"No open price available for {symbol}")
+                    continue
+
+                # Create PreMarketData object
+                premarket = PreMarketData(
+                    symbol=symbol,
+                    previous_close=prev_data['close'],
+                    today_open=current_open,
+                    prev_high=prev_data['high'],
+                    prev_low=prev_data['low'],
+                    prev_vwap=prev_data['vwap']
+                )
+
+                self.premarket_data[symbol] = premarket
+                logger.info(f"  {symbol}: Gap {premarket.gap_pct:+.2f}% ({premarket.gap_type.value})")
 
             except Exception as e:
                 logger.error(f"Error collecting premarket data for {symbol}: {e}")
@@ -202,21 +210,29 @@ class MMFSStrategy:
 
         for symbol in self.symbols:
             try:
-                # Fetch current candle data
-                # Placeholder implementation - replace with actual data fetching
-                # candle = await self.data_service.get_current_candle(symbol, timeframe='1min')
+                # Skip if already tracked
+                if symbol in self.first_candle_data:
+                    continue
 
-                # self.first_candle_data[symbol] = {
-                #     'high': candle['high'],
-                #     'low': candle['low'],
-                #     'open': candle['open'],
-                #     'close': candle['close'],
-                #     'vwap': candle['vwap'],
-                #     'volume': candle['volume'],
-                #     'volume_ratio': candle['volume'] / candle.get('avg_volume', 1)
-                # }
+                # Get current quote for live candle data
+                quote = await self.data_service.get_current_quote(symbol)
+                if not quote:
+                    continue
 
-                pass
+                # Calculate VWAP approximation
+                vwap = (quote['high'] + quote['low'] + quote['last_price']) / 3
+
+                self.first_candle_data[symbol] = {
+                    'high': quote['high'],
+                    'low': quote['low'],
+                    'open': quote['open'],
+                    'close': quote['last_price'],
+                    'vwap': vwap,
+                    'volume': quote.get('volume', 0),
+                    'volume_ratio': 1.5  # Default for now - calculate properly with historical avg
+                }
+
+                logger.debug(f"First candle tracked for {symbol}: H={quote['high']}, L={quote['low']}")
 
             except Exception as e:
                 logger.error(f"Error tracking first candle for {symbol}: {e}")
