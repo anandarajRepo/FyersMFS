@@ -177,12 +177,33 @@ async def run_mmfs_strategy():
             logger.error(f" Failed to initialize Fyers client: {e}")
             return
 
+        from services.fyers_breadth_service import FyersMarketBreadthService
+
+        # In main.py, around line 180, replace the breadth service initialization:
+
+        from services.hybrid_breadth_service import HybridMarketBreadthService
+
         # Initialize services
         logger.info("Initializing services...")
 
         data_service = DataService(fyers_client)
         order_manager = OrderManager(fyers_client)
-        breadth_service = MarketBreadthService()
+
+        # Use Hybrid breadth service (REST + WebSocket)
+        breadth_service = HybridMarketBreadthService(
+            fyers_client=fyers_client,
+            access_token=fyers_config.access_token,
+            client_id=fyers_config.client_id,
+            use_quick_basket=True,  # Use 15 stocks for speed
+            enable_websocket=True  # Enable real-time updates
+        )
+
+        # Initialize the breadth service
+        if not breadth_service.initialize():
+            logger.error(" Failed to initialize market breadth service")
+            return
+
+        logger.info(" Hybrid market breadth service initialized (REST + WebSocket)")
 
         # Get trading symbols
         # primary_symbols = get_primary_symbols()

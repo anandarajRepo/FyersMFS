@@ -186,20 +186,26 @@ class MMFSStrategy:
         logger.info(" Updating market breadth...")
 
         try:
-            breadth_data = self.breadth_service.fetch_advance_decline_data()
-            if breadth_data:
-                ad_ratio, classification = self.breadth_service.calculate_breadth_ratio(breadth_data)
-                strength = self.breadth_service.get_breadth_strength_score()
+            # Get breadth summary (automatically uses WebSocket if available)
+            summary = self.breadth_service.get_breadth_summary()
 
-                self.market_state.advances = breadth_data['advances']
-                self.market_state.declines = breadth_data['declines']
-                self.market_state.ad_ratio = ad_ratio
+            if summary.get('available'):
+                self.market_state.advances = summary['advances']
+                self.market_state.declines = summary['declines']
+                self.market_state.ad_ratio = summary['ad_ratio']
                 self.market_state.breadth_classification = self.breadth_service.get_market_breadth()
-                self.market_state.breadth_strength = strength
+                self.market_state.breadth_strength = self.breadth_service.get_breadth_strength_score()
 
-                logger.info(f" Market Breadth: {classification} (A/D: {ad_ratio:.2f}, Strength: {strength:.0f}/100)")
+                source = summary.get('source', 'unknown')
+                ws_active = " (WebSocket)" if summary.get('websocket_active') else " (REST API)"
+
+                logger.info(f" Market Breadth{ws_active}: {summary['classification']} "
+                            f"(A/D: {summary['ad_ratio']:.2f}, Strength: {self.market_state.breadth_strength:.0f}/100)")
+                logger.info(f"  Advances: {summary['advances']} ({summary['advance_pct']}%), "
+                            f"Declines: {summary['declines']} ({summary['decline_pct']}%)")
             else:
-                logger.warning(" Could not fetch market breadth data")
+                logger.warning(f" Could not fetch market breadth data: {summary.get('error')}")
+
         except Exception as e:
             logger.error(f"Error updating market breadth: {e}")
 
@@ -620,6 +626,11 @@ class MMFSStrategy:
         # Close any open positions
         for symbol in list(self.positions.keys()):
             await self._exit_position(self.positions[symbol], "STRATEGY_STOP")
+
+        # Stop breadth service
+        if hasattr(self.breadth_service, 'stop'):
+            self.breadth_service.stop()
+            logger.info(" Market breadth service stopped")
 
         # Print final metrics
         self._print_final_metrics()
