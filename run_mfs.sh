@@ -1,4 +1,5 @@
 #!/bin/bash
+export TRADING_MODE=PAPER
 truncate -s 0 /var/log/mfs.log
 truncate -s 0 cd /root/FyersMFS/mfs.log
 cd /root/FyersMFS
