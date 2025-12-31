@@ -233,50 +233,53 @@ class MarketBreadthService:
         return (1 / ratio_range) < ad_ratio < ratio_range
 
     def get_breadth_summary(self) -> Dict:
-        """Get comprehensive market breadth summary"""
+        """Get comprehensive breadth summary"""
         try:
-            breadth_data = self.fetch_advance_decline_data()
+            data = self.fetch_advance_decline_data()
+            if not data:
+                return {'available': False, 'error': 'No breadth data'}
 
-            if not breadth_data:
-                return {
-                    'available': False,
-                    'error': 'Failed to fetch breadth data'
-                }
+            total = data['total']
 
-            ad_ratio, classification = self.calculate_breadth_ratio(breadth_data)
+            # Calculate ad_ratio if not present in data
+            if 'ad_ratio' in data:
+                ad_ratio = data['ad_ratio']
+            else:
+                # Calculate it from advances/declines
+                advances = data['advances']
+                declines = data['declines']
+                ad_ratio = advances / max(declines, 1) if declines > 0 else 1.0
 
-            # Calculate percentages
-            total = breadth_data['total']
-            adv_pct = (breadth_data['advances'] / total * 100) if total > 0 else 0
-            dec_pct = (breadth_data['declines'] / total * 100) if total > 0 else 0
-            unch_pct = (breadth_data['unchanged'] / total * 100) if total > 0 else 0
+            # Classify
+            if ad_ratio >= 1.5:
+                classification = "BULLISH"
+            elif ad_ratio <= (1 / 1.5):
+                classification = "BEARISH"
+            else:
+                classification = "NEUTRAL"
 
-            summary = {
+            return {
                 'available': True,
-                'advances': breadth_data['advances'],
-                'declines': breadth_data['declines'],
-                'unchanged': breadth_data['unchanged'],
+                'advances': data['advances'],
+                'declines': data['declines'],
+                'unchanged': data['unchanged'],
                 'total': total,
-                'advance_pct': round(adv_pct, 1),
-                'decline_pct': round(dec_pct, 1),
-                'unchanged_pct': round(unch_pct, 1),
+                'advance_pct': round((data['advances'] / total * 100) if total > 0 else 0, 1),
+                'decline_pct': round((data['declines'] / total * 100) if total > 0 else 0, 1),
+                'unchanged_pct': round((data['unchanged'] / total * 100) if total > 0 else 0, 1),
                 'ad_ratio': round(ad_ratio, 2),
                 'classification': classification,
                 'is_bullish': ad_ratio >= 1.5,
                 'is_bearish': ad_ratio <= (1 / 1.5),
                 'is_neutral': (1 / 1.5) < ad_ratio < 1.5,
-                'timestamp': breadth_data['timestamp'].isoformat(),
-                'is_fallback': breadth_data.get('is_fallback', False)
+                'timestamp': data['timestamp'].isoformat() if data.get('timestamp') else None,
+                'source': data.get('source', 'unknown'),
+                'websocket_active': self.use_websocket_data and self.ws_tracker.is_connected if self.ws_tracker else False
             }
-
-            return summary
 
         except Exception as e:
             logger.error(f"Error generating breadth summary: {e}")
-            return {
-                'available': False,
-                'error': str(e)
-            }
+            return {'available': False, 'error': str(e)}
 
     def validate_breadth_for_setup(self, setup_type: str, required_breadth: MarketBreadth) -> bool:
         """
