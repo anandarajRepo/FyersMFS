@@ -152,7 +152,13 @@ class HybridMarketBreadthService:
                 return {'available': False, 'error': 'No breadth data'}
 
             total = data['total']
-            ad_ratio = data['ad_ratio']
+            # Calculate ad_ratio if not present (REST API doesn't include it)
+            if 'ad_ratio' in data:
+                ad_ratio = data['ad_ratio']
+            else:
+                declines = data['declines']
+                advances = data['advances']
+                ad_ratio = advances / max(declines, 1) if declines > 0 else 1.0
 
             # Classify
             if ad_ratio >= 1.5:
