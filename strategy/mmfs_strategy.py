@@ -418,28 +418,330 @@ class MMFSStrategy:
         """
         Setup 2: Gap-Up Failure (SHORT)
 
-        To be implemented with similar structure to Setup 1
+        Conditions:
+        - Gap ≥ +0.50%
+        - Market breadth BEARISH or NEUTRAL
+        - First candle shows rejection (large upper wick)
+        - Closes below VWAP (optional)
+
+        Entry: Below first candle low
+        Stop: First candle high
+        Target: Previous day low or 1:1.5 RR
         """
-        # TODO: Implement Setup 2 logic
-        return None
+        # Get first candle data
+        if symbol not in self.first_candle_data:
+            return None
+
+        first_candle = self.first_candle_data[symbol]
+
+        # Check rejection wick - must have significant upper wick for failure setup
+        candle_range = first_candle['high'] - first_candle['low']
+        if candle_range <= 0:
+            return None
+
+        upper_wick = first_candle['high'] - max(first_candle['open'], first_candle['close'])
+        rejection_pct = (upper_wick / candle_range) * 100
+
+        # Require significant rejection for gap-up failure
+        if self.strategy_config.setup2_require_vwap_rejection:
+            if rejection_pct < self.strategy_config.setup2_min_upper_wick_pct:
+                return None
+            # Should close below VWAP for confirmation
+            if first_candle['close'] >= first_candle['vwap']:
+                return None
+
+        # Calculate entry, stop, target
+        entry_price = first_candle['low']
+        stop_loss = first_candle['high']
+
+        # Target: Previous day low or RR-based
+        rr_target = entry_price - (stop_loss - entry_price) * self.strategy_config.risk_reward_ratio
+        target_price = max(rr_target, premarket.prev_low)
+
+        # Calculate confidence
+        confidence = self._calculate_setup2_confidence(premarket, first_candle, rejection_pct)
+
+        if confidence < self.strategy_config.min_confidence_setup2:
+            return None
+
+        # Create signal
+        signal = MMFSSignal(
+            symbol=symbol,
+            setup_type=MMFSSetupType.GAP_UP_FAILURE,
+            signal_type=SignalType.SHORT,
+            entry_price=entry_price,
+            stop_loss=stop_loss,
+            target_price=target_price,
+            gap_pct=premarket.gap_pct,
+            gap_type=premarket.gap_type,
+            market_breadth=self.market_state.breadth_classification,
+            ad_ratio=self.market_state.ad_ratio,
+            first_candle_high=first_candle['high'],
+            first_candle_low=first_candle['low'],
+            first_candle_close=first_candle['close'],
+            first_candle_vwap=first_candle['vwap'],
+            confidence=confidence,
+            volume_ratio=first_candle.get('volume_ratio', 1.0),
+            vwap_alignment=first_candle['close'] < first_candle['vwap'],
+            rejection_wick_pct=rejection_pct
+        )
+
+        logger.info(f" Setup 2 Signal: {symbol} SHORT @ {entry_price:.2f} "
+                    f"(Gap: {premarket.gap_pct:+.2f}%, Rejection: {rejection_pct:.0f}%, Confidence: {confidence:.0%})")
+
+        return signal
+
+    def _calculate_setup2_confidence(self, premarket: PreMarketData, first_candle: Dict, rejection_pct: float) -> float:
+        """Calculate confidence score for Setup 2"""
+        score = 0.5  # Base score
+
+        # Gap strength
+        if premarket.gap_pct > 0.80:
+            score += 0.15
+        elif premarket.gap_pct > 0.50:
+            score += 0.10
+
+        # Rejection strength
+        if rejection_pct > 60:
+            score += 0.15
+        elif rejection_pct > 50:
+            score += 0.10
+
+        # Breadth confirmation (bearish breadth is stronger signal)
+        if self.market_state.breadth_classification == MarketBreadth.BEARISH:
+            score += 0.15
+        elif self.market_state.breadth_classification == MarketBreadth.NEUTRAL:
+            score += 0.05
+
+        # Volume confirmation
+        volume_ratio = first_candle.get('volume_ratio', 1.0)
+        if volume_ratio > 2.0:
+            score += 0.10
+        elif volume_ratio > 1.5:
+            score += 0.05
+
+        return min(score, 1.0)
 
     async def _evaluate_setup3_gap_down_recovery(self, symbol: str, premarket: PreMarketData) -> Optional[MMFSSignal]:
         """
         Setup 3: Gap-Down Recovery (LONG)
 
-        To be implemented
+        Conditions:
+        - Gap ≤ -0.30%
+        - Market breadth BULLISH
+        - First candle shows recovery (reclaims VWAP)
+        - Small lower wick (strong recovery)
+
+        Entry: Above first candle high
+        Stop: First candle low
+        Target: Previous close or 1:1.5 RR
         """
-        # TODO: Implement Setup 3 logic
-        return None
+        # Get first candle data
+        if symbol not in self.first_candle_data:
+            return None
+
+        first_candle = self.first_candle_data[symbol]
+
+        # Check VWAP reclaim
+        if self.strategy_config.setup3_require_vwap_reclaim:
+            if first_candle['close'] <= first_candle['vwap']:
+                return None
+
+        # Check lower wick - should be small (strong recovery)
+        candle_range = first_candle['high'] - first_candle['low']
+        if candle_range <= 0:
+            return None
+
+        lower_wick = min(first_candle['open'], first_candle['close']) - first_candle['low']
+        lower_wick_pct = (lower_wick / candle_range) * 100
+
+        # For recovery, we want strong buying (small lower wick, strong close)
+        # Don't reject if lower wick is too large, just factor into confidence
+
+        # Calculate entry, stop, target
+        entry_price = first_candle['high']
+        stop_loss = first_candle['low']
+
+        # Target: Previous close (gap fill) or RR-based, whichever is closer
+        rr_target = entry_price + (entry_price - stop_loss) * self.strategy_config.risk_reward_ratio
+        target_price = min(rr_target, premarket.previous_close)
+
+        # Calculate confidence
+        confidence = self._calculate_setup3_confidence(premarket, first_candle, lower_wick_pct)
+
+        if confidence < self.strategy_config.min_confidence_setup3:
+            return None
+
+        # Create signal
+        signal = MMFSSignal(
+            symbol=symbol,
+            setup_type=MMFSSetupType.GAP_DOWN_RECOVERY,
+            signal_type=SignalType.LONG,
+            entry_price=entry_price,
+            stop_loss=stop_loss,
+            target_price=target_price,
+            gap_pct=premarket.gap_pct,
+            gap_type=premarket.gap_type,
+            market_breadth=self.market_state.breadth_classification,
+            ad_ratio=self.market_state.ad_ratio,
+            first_candle_high=first_candle['high'],
+            first_candle_low=first_candle['low'],
+            first_candle_close=first_candle['close'],
+            first_candle_vwap=first_candle['vwap'],
+            confidence=confidence,
+            volume_ratio=first_candle.get('volume_ratio', 1.0),
+            vwap_alignment=first_candle['close'] > first_candle['vwap'],
+            rejection_wick_pct=lower_wick_pct
+        )
+
+        logger.info(f" Setup 3 Signal: {symbol} LONG @ {entry_price:.2f} "
+                    f"(Gap: {premarket.gap_pct:+.2f}%, Recovery, Confidence: {confidence:.0%})")
+
+        return signal
+
+    def _calculate_setup3_confidence(self, premarket: PreMarketData, first_candle: Dict, lower_wick_pct: float) -> float:
+        """Calculate confidence score for Setup 3"""
+        score = 0.5  # Base score
+
+        # Gap depth (deeper gap down gives more recovery potential)
+        if premarket.gap_pct < -0.50:
+            score += 0.15
+        elif premarket.gap_pct < -0.30:
+            score += 0.10
+
+        # Recovery strength (smaller lower wick = stronger recovery)
+        if lower_wick_pct < 20:
+            score += 0.15
+        elif lower_wick_pct < 30:
+            score += 0.10
+
+        # Breadth strength (bullish breadth is key for recovery)
+        if self.market_state.breadth_strength > 70:
+            score += 0.15
+        elif self.market_state.breadth_strength > 60:
+            score += 0.10
+
+        # Volume confirmation
+        volume_ratio = first_candle.get('volume_ratio', 1.0)
+        if volume_ratio > 2.0:
+            score += 0.10
+        elif volume_ratio > 1.5:
+            score += 0.05
+
+        return min(score, 1.0)
 
     async def _evaluate_setup4_range_breakdown(self, symbol: str, premarket: PreMarketData) -> Optional[MMFSSignal]:
         """
         Setup 4: Opening Range Breakdown (Scalp)
 
-        To be implemented
+        Conditions:
+        - Absolute gap < 0.30% (small/no gap)
+        - Market breadth NEUTRAL
+        - First candle establishes opening range
+        - Scalp for quick profit on breakdown
+
+        Entry: Below first candle low (breakdown)
+        Stop: First candle high
+        Target: Fixed scalp target (0.25% of entry)
         """
-        # TODO: Implement Setup 4 logic
-        return None
+        # Get first candle data
+        if symbol not in self.first_candle_data:
+            return None
+
+        first_candle = self.first_candle_data[symbol]
+
+        # Check candle range validity
+        candle_range = first_candle['high'] - first_candle['low']
+        if candle_range <= 0:
+            return None
+
+        # For scalp setup, prefer reasonable volatility
+        # Don't trade if range is too tight or too wide
+        range_pct = (candle_range / first_candle['close']) * 100
+        if range_pct < 0.10 or range_pct > 1.0:
+            # Range too small (< 0.10%) or too large (> 1%)
+            return None
+
+        # Volume check if required
+        if self.strategy_config.setup4_require_volume_breakout:
+            volume_ratio = first_candle.get('volume_ratio', 1.0)
+            if volume_ratio < self.strategy_config.min_volume_ratio:
+                return None
+
+        # Calculate entry, stop, target for SHORT (breakdown)
+        entry_price = first_candle['low']
+        stop_loss = first_candle['high']
+
+        # Fixed scalp target (0.25% below entry)
+        scalp_distance = entry_price * (self.strategy_config.setup4_scalp_target_pct / 100)
+        target_price = entry_price - scalp_distance
+
+        # Calculate confidence
+        confidence = self._calculate_setup4_confidence(premarket, first_candle, range_pct)
+
+        if confidence < self.strategy_config.min_confidence_setup4:
+            return None
+
+        # Create signal (SHORT for breakdown)
+        signal = MMFSSignal(
+            symbol=symbol,
+            setup_type=MMFSSetupType.RANGE_BREAKDOWN,
+            signal_type=SignalType.SHORT,
+            entry_price=entry_price,
+            stop_loss=stop_loss,
+            target_price=target_price,
+            gap_pct=premarket.gap_pct,
+            gap_type=premarket.gap_type,
+            market_breadth=self.market_state.breadth_classification,
+            ad_ratio=self.market_state.ad_ratio,
+            first_candle_high=first_candle['high'],
+            first_candle_low=first_candle['low'],
+            first_candle_close=first_candle['close'],
+            first_candle_vwap=first_candle['vwap'],
+            confidence=confidence,
+            volume_ratio=first_candle.get('volume_ratio', 1.0),
+            vwap_alignment=True,  # Neutral for range breakdown
+            five_min_range_high=first_candle['high'],
+            five_min_range_low=first_candle['low']
+        )
+
+        logger.info(f" Setup 4 Signal: {symbol} SHORT (Scalp) @ {entry_price:.2f} "
+                    f"(Gap: {premarket.gap_pct:+.2f}%, Range: {range_pct:.2f}%, Confidence: {confidence:.0%})")
+
+        return signal
+
+    def _calculate_setup4_confidence(self, premarket: PreMarketData, first_candle: Dict, range_pct: float) -> float:
+        """Calculate confidence score for Setup 4"""
+        score = 0.5  # Base score
+
+        # Neutral gap is good for range breakdown
+        if abs(premarket.gap_pct) < 0.10:
+            score += 0.15
+        elif abs(premarket.gap_pct) < 0.20:
+            score += 0.10
+
+        # Range volatility (moderate range is ideal for scalping)
+        if 0.20 <= range_pct <= 0.50:
+            score += 0.15
+        elif 0.15 <= range_pct <= 0.70:
+            score += 0.10
+
+        # Neutral breadth is expected, but check strength
+        if self.market_state.breadth_classification == MarketBreadth.NEUTRAL:
+            # Check how neutral (closer to 1.0 AD ratio is better)
+            if 0.9 <= self.market_state.ad_ratio <= 1.1:
+                score += 0.10
+            elif 0.8 <= self.market_state.ad_ratio <= 1.2:
+                score += 0.05
+
+        # Volume confirmation
+        volume_ratio = first_candle.get('volume_ratio', 1.0)
+        if volume_ratio > 1.8:
+            score += 0.10
+        elif volume_ratio > 1.3:
+            score += 0.05
+
+        return min(score, 1.0)
 
     async def _execute_signal(self, signal: MMFSSignal):
         """Execute MMFS trade signal"""
