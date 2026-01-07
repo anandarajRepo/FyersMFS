@@ -52,7 +52,7 @@ from strategy.mmfs_strategy import MMFSStrategy
 from services.data_service import DataService
 from services.order_manager import OrderManager
 from services.market_breadth_service import MarketBreadthService
-from config.symbols import get_primary_symbols, format_symbol_for_fyers, get_symbols_by_group
+from config.symbols import get_primary_symbols, format_symbol_for_fyers, get_symbols_by_group, get_ipo_symbols
 from config.mmfs_config import MMFSStrategyConfig, MMFSTradingConfig
 
 
@@ -207,7 +207,7 @@ async def run_mmfs_strategy():
 
         # Get trading symbols
         # primary_symbols = get_primary_symbols()
-        stocks_symbols = get_symbols_by_group("STOCKS")
+        stocks_symbols = get_ipo_symbols()
         symbol_list = [format_symbol_for_fyers(name) for name in stocks_symbols.keys()]
 
         logger.info(f" Trading symbols: {', '.join(stocks_symbols.keys())}")
