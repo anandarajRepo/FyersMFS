@@ -148,6 +148,35 @@ MMFS_SYMBOLS = {
     },
 }
 
+# IPO Stocks
+IPO_SYMBOLS = {
+    "URBANCO": "NSE:URBANCO-EQ",
+    "AMANTA": "NSE:AMANTA-EQ",
+    "VIKRAMSOLR": "NSE:VIKRAMSOLR-EQ",
+    "SHREEJISPG": "NSE:SHREEJISPG-EQ",
+    "PATELRMART": "NSE:PATELRMART-EQ",
+    "REGAAL": "NSE:REGAAL-EQ",
+    "HILINFRA": "NSE:HILINFRA-EQ",
+    "SAATVIKGL": "NSE:SAATVIKGL-EQ",
+    "ATLANTAELE": "NSE:ATLANTAELE-EQ",
+    "STYL": "NSE:STYL-EQ",
+    "SOLARWORLD": "NSE:SOLARWORLD-EQ",
+    "TRUALT": "NSE:TRUALT-EQ",
+    "ADVANCE": "NSE:ADVANCE-EQ",
+    "LGEINDIA": "NSE:LGEINDIA-EQ",
+    "RUBICON": "NSE:RUBICON-EQ",
+    "MIDWESTLTD": "NSE:MIDWESTLTD-EQ",
+    "ORKLAINDIA": "NSE:ORKLAINDIA-EQ",
+    "LENSKART": "NSE:LENSKART-EQ",
+    "GROWW": "NSE:GROWW-EQ",
+    "SUDEEPPHRM": "NSE:SUDEEPPHRM-EQ",
+    "EXCELSOFT": "NSE:EXCELSOFT-EQ",
+    "TENNIND": "NSE:TENNIND-EQ",
+    "MEESHO": "NSE:MEESHO-EQ",
+    "AEQUS": "NSE:AEQUS-EQ",
+    "CORONA": "NSE:CORONA-EQ",
+}
+
 # Symbol groups for different trading strategies
 SYMBOL_GROUPS = {
     'INDICES': ['NIFTY', 'BANKNIFTY', 'FINNIFTY'],
@@ -155,7 +184,8 @@ SYMBOL_GROUPS = {
     'STOCKS': ['RELIANCE', 'TCS', 'HDFCBANK', 'INFY', 'ICICIBANK',
                'SBIN', 'HINDUNILVR', 'ITC', 'KOTAKBANK', 'LT'],
     'PRIMARY': ['NIFTY', 'BANKNIFTY'],  # Primary focus for MMFS
-    'SECONDARY': ['FINNIFTY', 'RELIANCE', 'TCS', 'HDFCBANK']  # Secondary
+    'SECONDARY': ['FINNIFTY', 'RELIANCE', 'TCS', 'HDFCBANK'],  # Secondary
+    'IPO': list(IPO_SYMBOLS.keys())  # IPO stocks
 }
 
 
@@ -186,6 +216,16 @@ def get_primary_symbols():
 def get_all_symbol_names():
     """Get list of all symbol names"""
     return list(MMFS_SYMBOLS.keys())
+
+
+def get_ipo_symbols():
+    """Get all IPO symbols"""
+    return IPO_SYMBOLS
+
+
+def get_ipo_symbol_names():
+    """Get list of IPO symbol names"""
+    return list(IPO_SYMBOLS.keys())
 
 
 def format_symbol_for_fyers(symbol_name: str):
