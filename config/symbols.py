@@ -146,36 +146,80 @@ MMFS_SYMBOLS = {
         'tick_size': 0.05,
         'priority': 19
     },
+
+    # IPO Stocks
+    'URBANCO': {
+        'symbol': 'NSE:URBANCO-EQ',
+    },
+    'AMANTA': {
+        'symbol': 'NSE:AMANTA-EQ',
+    },
+    'VIKRAMSOLR': {
+        'symbol': 'NSE:VIKRAMSOLR-EQ',
+    },
+    'SHREEJISPG': {
+        'symbol': 'NSE:SHREEJISPG-EQ',
+    },
+    'PATELRMART': {
+        'symbol': 'NSE:PATELRMART-EQ',
+    },
+    'HILINFRA': {
+        'symbol': 'NSE:HILINFRA-EQ',
+    },
+    'SAATVIKGL': {
+        'symbol': 'NSE:SAATVIKGL-EQ',
+    },
+    'ATLANTAELE': {
+        'symbol': 'NSE:ATLANTAELE-EQ',
+    },
+    'STYL': {
+        'symbol': 'NSE:STYL-EQ',
+    },
+    'SOLARWORLD': {
+        'symbol': 'NSE:SOLARWORLD-EQ',
+    },
+    'TRUALT': {
+        'symbol': 'NSE:TRUALT-EQ',
+    },
+    'ADVANCE': {
+        'symbol': 'NSE:ADVANCE-EQ',
+    },
+    'LGEINDIA': {
+        'symbol': 'NSE:LGEINDIA-EQ',
+    },
+    'RUBICON': {
+        'symbol': 'NSE:RUBICON-EQ',
+    },
+    'MIDWESTLTD': {
+        'symbol': 'NSE:MIDWESTLTD-EQ',
+    },
+    'ORKLAINDIA': {
+        'symbol': 'NSE:ORKLAINDIA-EQ',
+    },
+    'LENSKART': {
+        'symbol': 'NSE:LENSKART-EQ',
+    },
+    'GROWW': {
+        'symbol': 'NSE:GROWW-EQ',
+    },
+    'EXCELSOFT': {
+        'symbol': 'NSE:EXCELSOFT-EQ',
+    },
+    'TENNIND': {
+        'symbol': 'NSE:TENNIND-EQ',
+    },
+    'MEESHO': {
+        'symbol': 'NSE:MEESHO-EQ',
+    },
+    'AEQUS': {
+        'symbol': 'NSE:AEQUS-EQ',
+    },
+    'CORONA': {
+        'symbol': 'NSE:CORONA-EQ',
+    },
 }
 
-# IPO Stocks
-IPO_SYMBOLS = {
-    "URBANCO": "NSE:URBANCO-EQ",
-    "AMANTA": "NSE:AMANTA-EQ",
-    "VIKRAMSOLR": "NSE:VIKRAMSOLR-EQ",
-    "SHREEJISPG": "NSE:SHREEJISPG-EQ",
-    "PATELRMART": "NSE:PATELRMART-EQ",
-    "REGAAL": "NSE:REGAAL-EQ",
-    "HILINFRA": "NSE:HILINFRA-EQ",
-    "SAATVIKGL": "NSE:SAATVIKGL-EQ",
-    "ATLANTAELE": "NSE:ATLANTAELE-EQ",
-    "STYL": "NSE:STYL-EQ",
-    "SOLARWORLD": "NSE:SOLARWORLD-EQ",
-    "TRUALT": "NSE:TRUALT-EQ",
-    "ADVANCE": "NSE:ADVANCE-EQ",
-    "LGEINDIA": "NSE:LGEINDIA-EQ",
-    "RUBICON": "NSE:RUBICON-EQ",
-    "MIDWESTLTD": "NSE:MIDWESTLTD-EQ",
-    "ORKLAINDIA": "NSE:ORKLAINDIA-EQ",
-    "LENSKART": "NSE:LENSKART-EQ",
-    "GROWW": "NSE:GROWW-EQ",
-    "SUDEEPPHRM": "NSE:SUDEEPPHRM-EQ",
-    "EXCELSOFT": "NSE:EXCELSOFT-EQ",
-    "TENNIND": "NSE:TENNIND-EQ",
-    "MEESHO": "NSE:MEESHO-EQ",
-    "AEQUS": "NSE:AEQUS-EQ",
-    "CORONA": "NSE:CORONA-EQ",
-}
+
 
 # Symbol groups for different trading strategies
 SYMBOL_GROUPS = {
@@ -185,7 +229,7 @@ SYMBOL_GROUPS = {
                'SBIN', 'HINDUNILVR', 'ITC', 'KOTAKBANK', 'LT'],
     'PRIMARY': ['NIFTY', 'BANKNIFTY'],  # Primary focus for MMFS
     'SECONDARY': ['FINNIFTY', 'RELIANCE', 'TCS', 'HDFCBANK'],  # Secondary
-    'IPO': list(IPO_SYMBOLS.keys())  # IPO stocks
+    'IPO': ['URBANCO', 'AMANTA', 'VIKRAMSOLR', 'SHREEJISPG', 'PATELRMART', 'HILINFRA', 'SAATVIKGL', 'ATLANTAELE', 'STYL', 'SOLARWORLD', 'TRUALT', 'ADVANCE', 'LGEINDIA', 'RUBICON', 'MIDWESTLTD', 'ORKLAINDIA', 'LENSKART', 'GROWW', 'EXCELSOFT', 'TENNIND', 'MEESHO', 'AEQUS', 'CORONA']  # IPO stocks
 }
 
 
@@ -216,16 +260,6 @@ def get_primary_symbols():
 def get_all_symbol_names():
     """Get list of all symbol names"""
     return list(MMFS_SYMBOLS.keys())
-
-
-def get_ipo_symbols():
-    """Get all IPO symbols"""
-    return IPO_SYMBOLS
-
-
-def get_ipo_symbol_names():
-    """Get list of IPO symbol names"""
-    return list(IPO_SYMBOLS.keys())
 
 
 def format_symbol_for_fyers(symbol_name: str):
